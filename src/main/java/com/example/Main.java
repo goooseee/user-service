@@ -75,7 +75,7 @@ public class Main {
 	
 	        System.out.print("Введите возраст: ");
 	        int age = Integer.parseInt(scanner.nextLine().trim());
-        	userService.createUser(name, email, age);
+        	userService.createUser(new UserDTORequest( name, email, age ));
 		}catch (NumberFormatException e) {
             System.out.println("Ошибка ввода: Возраст должен быть целым числом!");
         }catch(IllegalArgumentException e) {

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.example.configuration.HibernateConfig;
+import com.example.configuration.ValidatorUtil;
 import com.example.entity.User;
 import com.example.exception.DAOException;
 
