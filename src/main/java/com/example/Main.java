@@ -6,8 +6,11 @@ import java.util.Scanner;
 
 import com.example.DAO.UserDAO;
 import com.example.DAO.UserDAOImpl;
-import com.example.Entity.User;
-import com.example.Service.UserService;
+import com.example.DTO.UserDTORequest;
+import com.example.DTO.UserDTOResponse;
+import com.example.entity.User;
+import com.example.exception.DAOException;
+import com.example.service.UserService;
 
 public class Main {
 	
@@ -26,12 +29,12 @@ public class Main {
             
             if (!scanner.hasNextInt()) {
                 System.out.println("Ошибка: Введите число!");
-                scanner.nextLine();
+                scanner.nextLine().trim();
                 continue;
             }
 
             int choice = scanner.nextInt();
-            scanner.nextLine();
+            scanner.nextLine().trim();
 
             switch (choice) {
                 case 1 -> createUser();
@@ -63,84 +66,116 @@ public class Main {
     }
 	
 	private static void createUser() {
-        System.out.print("Введите имя: ");
-        String name = scanner.nextLine();
-
-        System.out.print("Введите email: ");
-        String email = scanner.nextLine();
-
-        System.out.print("Введите возраст: ");
-        int age = scanner.nextInt();
-        scanner.nextLine();
-
-        userService.createUser(name, email, age);
+		try {
+			System.out.print("Введите имя: ");
+	        String name = scanner.nextLine().trim();
+	
+	        System.out.print("Введите email: ");
+	        String email = scanner.nextLine().trim();
+	
+	        System.out.print("Введите возраст: ");
+	        int age = Integer.parseInt(scanner.nextLine().trim());
+        	userService.createUser(new UserDTORequest( name, email, age ));
+		}catch (NumberFormatException e) {
+            System.out.println("Ошибка ввода: Возраст должен быть целым числом!");
+        }catch(IllegalArgumentException e) {
+        	System.out.println("Ошибка валидации: " + e.getMessage());
+        }catch (DAOException e) {
+            System.out.println("Ошибка базы данных: " + e.getMessage());
+        }
     }
 	
 	private static void findUserById() {
+		try {
         System.out.print("Введите ID пользователя: ");
-        Long id = scanner.nextLong();
-        scanner.nextLine();
+        Long id = Long.parseLong(scanner.nextLine().trim());
 
-        Optional<User> userOptional = userService.findById(id);
+        Optional<UserDTOResponse> userOptional = userService.findById(id);
         if (userOptional.isPresent()) {
-            User user = userOptional.get();
+            UserDTOResponse user = userOptional.get();
             System.out.printf("Найден пользователь: ID=%d, Name=%s, Email=%s, Age=%d, CreatedAt=%s%n",
-                    user.getId(), user.getName(), user.getEmail(), user.getAge(), user.getCreatedAt());
+                    user.id(), user.name(), user.email(), user.age(), user.createdAt());
         } else {
             System.out.println("Пользователь с ID " + id + " не найден.");
+        }
+		}catch (NumberFormatException e) {
+            System.out.println("ID должен быть целым числом");
+        }catch (DAOException e) {
+            System.out.println("Ошибка базы данных: " + e.getMessage());
         }
     }
 	
 	private static void showAllUsers() {
-        List<User> users = userService.findAll();
+		try {
+        List<UserDTOResponse> users = userService.findAll();
         if (users.isEmpty()) {
             System.out.println("Список пользователей пуст.");
         } else {
             System.out.println("Список всех пользователей:");
             users.forEach(u -> System.out.printf("ID=%d | Name=%s | Email=%s | Age=%d | CreatedAt=%s%n",
-                    u.getId(), u.getName(), u.getEmail(), u.getAge(), u.getCreatedAt()));
+                    u.id(), u.name(), u.email(), u.age(), u.createdAt()));
+        }
+		}catch (DAOException e) {
+            System.out.println("Ошибка базы данных: " + e.getMessage());
         }
     }
 	
 	private static void updateUser() {
-        System.out.print("Введите ID пользователя для обновления: ");
-        Long id = scanner.nextLong();
-        scanner.nextLine();
-
-        Optional<User> userOptional = userService.findById(id);
+		try {
+		System.out.print("Введите ID пользователя для обновления: ");
+        Long id = Long.parseLong(scanner.nextLine().trim());
+        
+        	Optional<UserDTOResponse> userOptional = userService.findById(id);
         if (userOptional.isEmpty()) {
             System.out.println("Пользователь с ID " + id + " не найден.");
             return;
         }
 
-        User user = userOptional.get();
-        System.out.print("Введите новое имя (или нажмите Enter, чтобы оставить '" + user.getName() + "'): ");
-        String newName = scanner.nextLine();
-        if (!newName.isBlank()) {
-            user.setName(newName);
+        UserDTOResponse user = userOptional.get();
+        System.out.print("Введите новое имя (или нажмите Enter, чтобы оставить '" + user.name() + "'): ");
+        String newName = scanner.nextLine().trim();
+        if (newName.isBlank()) {
+            newName = user.name();
         }
 
-        System.out.print("Введите новый email (или нажмите Enter, чтобы оставить '" + user.getEmail() + "'): ");
-        String newEmail = scanner.nextLine();
-        if (!newEmail.isBlank()) {
-            user.setEmail(newEmail);
+        System.out.print("Введите новый email (или нажмите Enter, чтобы оставить '" + user.email() + "'): ");
+        String newEmail = scanner.nextLine().trim();
+        if (newEmail.isBlank()) {
+            newEmail = user.email();
         }
 
-        System.out.print("Введите новый возраст (или 0, чтобы оставить " + user.getAge() + "): ");
-        int newAge = scanner.nextInt();
-        scanner.nextLine();
-        if (newAge > 0) {
-            user.setAge(newAge);
+        System.out.print("Введите новый возраст (или 0, чтобы оставить " + user.age() + "): ");
+        String newAge = scanner.nextLine().trim();
+        int age = user.age();
+        if(!newAge.isBlank()) {
+	        try {
+	        	age = Integer.parseInt( newAge );
+	        }catch(Exception e) {
+	        	System.out.println("Некорректный формат возраста. Оставлено прежнее значение: " + age);
+	        }
         }
-
-        userService.updateUser(user);
+        UserDTORequest userDTO = new UserDTORequest(newName, newEmail, age);
+        
+        userService.updateUser(id,userDTO);
+        }catch (NumberFormatException e) {
+            System.out.println("ID должен быть целым числом");
+        }catch(IllegalArgumentException e) {
+        	System.out.println("Ошибка валидации: " + e.getMessage());
+        }catch (DAOException e) {
+            System.out.println("Ошибка базы данных: " + e.getMessage());
+        }
     }
 	
 	private static void deleteUser() {
+		try {
         System.out.print("Введите ID пользователя для удаления: ");
-        Long id = scanner.nextLong();
-        scanner.nextLine();
-
-        userService.deleteUser(id);
+        Long id = Long.parseLong(scanner.nextLine().trim());
+        	userService.deleteUser(id);
+        }catch (NumberFormatException e) {
+            System.out.println("ID должен быть целым числом");
+        }catch(DAOException e) {
+        	System.out.println("Ошибка базы данных: " + e.getMessage());
+        	e.printStackTrace();
+        }
     }
 }
