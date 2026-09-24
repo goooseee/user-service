@@ -19,7 +19,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.DAO.UserDAO;
-import com.example.Entity.User;
+import com.example.DTO.UserDTOResponse;
+import com.example.entity.User;
+import com.example.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
@@ -36,11 +38,11 @@ public class UserServiceTest {
         String email = "ivan@example.com";
         int age = 25;
 
-        User createdUser = userService.createUser(name, email, age);
+        UserDTOResponse createdUser = userService.createUser(name, email, age);
 
         assertNotNull(createdUser);
-        assertEquals(name, createdUser.getName());
-        assertEquals(email, createdUser.getEmail());
+        assertEquals(name, createdUser.name());
+        assertEquals(email, createdUser.email());
         verify(userDao, times(1)).save(any(User.class));
     }
     
@@ -60,10 +62,10 @@ public class UserServiceTest {
         User expectedUser = new User("Петр", "petr@example.com", 30);
         when(userDao.findById(1L)).thenReturn(Optional.of(expectedUser));
 
-        Optional<User> actualUser = userService.findById(1L);
+        Optional<UserDTOResponse> actualUser = userService.findById(1L);
 
         assertTrue(actualUser.isPresent());
-        assertEquals("Петр", actualUser.get().getName());
+        assertEquals("Петр", actualUser.get().name());
         verify(userDao, times(1)).findById(1L);
     }
 }

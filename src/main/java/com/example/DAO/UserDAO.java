@@ -3,7 +3,7 @@ package com.example.DAO;
 import java.util.List;
 import java.util.Optional;
 
-import com.example.Entity.User;
+import com.example.entity.User;
 
 public interface UserDAO {
 	void save(User user);

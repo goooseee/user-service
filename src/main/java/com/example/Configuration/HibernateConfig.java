@@ -1,9 +1,9 @@
-package com.example.Configuration;
+package com.example.configuration;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-import com.example.Entity.User;
+import com.example.entity.User;
 
 public class HibernateConfig {
 	

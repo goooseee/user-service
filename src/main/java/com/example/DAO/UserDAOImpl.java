@@ -8,8 +8,9 @@ import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.example.Configuration.HibernateConfig;
-import com.example.Entity.User;
+import com.example.configuration.HibernateConfig;
+import com.example.entity.User;
+import com.example.exception.DAOException;
 
 public class UserDAOImpl implements UserDAO{
 	
@@ -29,6 +30,8 @@ public class UserDAOImpl implements UserDAO{
 				transaction.rollback();
 			}
 			logger.error("Ошибка при сохранении пользователя", e);
+			
+			throw new DAOException( "Не удалось сохранить пользователя в базу данных", e );
 		}
 		
 	}
@@ -41,7 +44,8 @@ public class UserDAOImpl implements UserDAO{
 		}
 		catch (Exception e) {
 			logger.error("Ошибка при поиске пользователя с ID: {}", id, e);
-			return Optional.empty();
+			
+			throw new DAOException( "Не удалось получить пользователя из базы данных", e );
 		}
 	}
 
@@ -52,12 +56,17 @@ public class UserDAOImpl implements UserDAO{
 		}
 		catch (Exception e) {
 			logger.error("Ошибка при получении списка пользователей", e);
-			return List.of();
+
+			throw new DAOException( "Не удалось получить пользователей из базы данных", e );
 		}
 	}
 
 	@Override
 	public void update(User user) {
+		if(user==null || user.getId()==null) {
+			logger.warn("Попытка обновить null пользователя или пользователя без ID");
+		    throw new DAOException("Нельзя обновить пользователя без ID", null);
+		}
 		Transaction transaction = null;
 		try(Session session = HibernateConfig.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
@@ -70,6 +79,8 @@ public class UserDAOImpl implements UserDAO{
 				transaction.rollback();
 			}
 			logger.error("Ошибка при обновлении пользователя с ID: {}", user.getId(), e);
+			
+			throw new DAOException( "Не удалось обновить пользователя в базе данных", e );
 		}
 	}
 
@@ -92,6 +103,8 @@ public class UserDAOImpl implements UserDAO{
 				transaction.rollback();
 			}
 			logger.error("Ошибка при удалении пользователя с ID: {}", id, e);
+			
+			throw new DAOException( "Не удалось удалить пользователя из базы данных", e );
 		}
 	}
 
